@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -18,6 +19,12 @@ func main() {
 	// contain the default value of ":4000". If any errors are encountered during parsing
 	// the application will be terminated.
 	flag.Parse()
+
+	// Use the slog.New() function to initialize a new structured logger, which writes
+	// to the stadard out stream and uses the default settings.
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+	}))
 
 	mux := http.NewServeMux()
 
@@ -37,8 +44,15 @@ func main() {
 	mux.HandleFunc("GET /snippet/create", snippetCreate)
 	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
 
-	log.Print("starting server on %s", *addr)
+	// Use the Info() method to log the starting server message at Info severity (along
+	// with the listen address as an attribute)
+	logger.Info("Starting server", slog.String("addr", *addr))
 
 	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+
+	// And we also use the Error() method to log any error message returned by
+	// http.ListenAndServe() at Error severity (with no additional attributes),
+	// and then call os.Exit(1) to terminate the application with exit code 1.
+	logger.Error(err.Error())
+	os.Exit(1)
 }
