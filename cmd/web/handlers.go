@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log/slog"
 	"net/http"
 	"strconv"
 )
@@ -25,15 +24,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// slice as variadic arguments.
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		// Because the home handler is now a method against the application
-		// struct it can access its fields, including the structured logger. We'll
-		// use this to create a log entry at Error level containing the error
-		// message, also including the request method and URI as attributes to
-		// assist with debugging.
-		app.logger.Error(err.Error(),
-			slog.String("method", r.Method),
-			slog.String("uri", r.URL.RequestURI()))
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err) // Use the serverError helper
 		return
 	}
 
@@ -41,10 +32,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// as the response body.
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		app.logger.Error(err.Error(),
-			slog.String("method", r.Method),
-			slog.String("uri", r.URL.RequestURI()))
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err) // Use the serverError helper
 	}
 }
 
