@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -21,32 +20,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Include the navigation partial in the template files.
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/home.tmpl",
-	}
-
-	// Use the template.ParseFiles() function to read the template file into a
-	// template set. Notice that we use ... to pass the contents of the files
-	// slice as variadic arguments.
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err) // Use the serverError helper
-		return
-	}
-
-	data := templateData{
+	app.render(w, r, http.StatusOK, "home.tmpl", templateData{
 		Snippets: snippets,
-	}
-
-	// Use the ExecuteTemplate() method to write the content of the "base" template
-	// as the response body.
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err) // Use the serverError helper
-	}
+	})
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -69,31 +45,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Initialize a slice containing the paths to the view.tmpl file,
-	// plus the base layout and navigation partial that we made earlier.
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/view.tmpl",
-	}
-
-	// Parse the template files...
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	data := templateData{
+	app.render(w, r, http.StatusOK, "view.tmpl", templateData{
 		Snippet: snippet,
-	}
-
-	// And then execute them. Notice how we are passing in the snippet
-	// data (a models.Snippet struct) as the final parameter?
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	})
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
